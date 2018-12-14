@@ -1,6 +1,12 @@
 # real-world-graphql-with-django
 Real world GraphQL patterns with Django
 
+1. [Querying](#querying)
+2. [Customizing and Optimizing Queries](#customizing-and-optimizing-queries)
+3. [Mutations](#mutations)
+4. [Better Mutations](#better-mutations)
+5. [Custom Field type](#custom-Field-types)
+
 
 # Querying
 
