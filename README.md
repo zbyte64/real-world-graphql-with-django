@@ -58,11 +58,11 @@ class Query(ObjectType):
 
 Define a custom `Field` to be used by our Query
 
-* For use at the top-level of the graph only, do not use inside a `DjangoObjectType`
+* Replaces `DjangoFilterConnectionField` in our Query object, do not use inside `DjangoObjectType`
 * graphene-django-optimizer to optimize queries across relationships
-* define your own auth check function
 * `Field.get_resolver` returns a callable which later receives a request as `info.context`
-* Copy/inherit functionality from `DjangoFilterConnectionField`
+* call custom auth_check inside resolver
+* Repeat for `DjangoObjectField` for securing single object lookups
 
 
 ```python
@@ -117,19 +117,20 @@ While `id`s from query are global, by default, they are not handled by mutations
 
 Three ways to define a mutation:
 
-* Manually with a custom `perform_mutate` classmethod
+* Manually with a custom `mutate` method
 * Wrapping a Django Rest Framework Serializer
-* Wrapping a (model) form with `DjangoFormMutation`
+* Wrapping a (model) form with `DjangoModelFormMutation`
 
-IMHO defining mutations based on Django Forms has struck a good balance between being DRY and not having too many abstractions.
+IMHO defining mutations based on Django Forms has struck a good balance between being DRY and having too many abstractions.
+Generally most of the customizing at the view level can go into two methods: `get_form_kwargs` and `perform_mutate`. 
 
 ```python
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login
-from graphene_django.forms.mutation import DjangoFormMutation
+from graphene_django.forms.mutation import DjangoModelFormMutation
 
 
-class AuthenticationMutation(DjangoFormMutation):
+class AuthenticationMutation(DjangoModelFormMutation):
     class Meta:
         form_class = AuthenticationForm
 
@@ -160,6 +161,8 @@ We'll extend the `DjangoModelFormMutation` class to do the following:
 * support partial updates
 * translate global ids
 * perform auth check
+
+By default `DjangoModelFormMutation` will create an object if no `id` is provided, we'll want to keep that behavior.
 
 ```python
 from graphene_django.forms.mutation import DjangoModelFormMutation
