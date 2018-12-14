@@ -16,7 +16,7 @@ For all Django models:
 When defining the `Query` object:
 
 * `DjangoFilterConnectionField` generates a resolving field with arguments from `filter_fields`
-* graphene-django-extras provides alternatives & other missing batteries like `DjangoObjectField` for single object lookup
+* [graphene-django-extras](https://github.com/eamigo86/graphene-django-extras) provides alternatives & other missing batteries like `DjangoObjectField` for single object lookup
 
 
 ```python
@@ -59,7 +59,7 @@ class Query(ObjectType):
 Define a custom `Field` to be used by our Query
 
 * Replaces `DjangoFilterConnectionField` in our Query object, do not use inside `DjangoObjectType`
-* graphene-django-optimizer to optimize queries across relationships
+* [graphene-django-optimizer](https://github.com/tfoxy/graphene-django-optimizer) to optimize queries across relationships
 * `Field.get_resolver` returns a callable which later receives a request as `info.context`
 * call custom auth_check inside resolver
 * Repeat for `DjangoObjectField` for securing single object lookups
