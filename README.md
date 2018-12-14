@@ -122,7 +122,7 @@ Three ways to define a mutation:
 * Wrapping a (model) form with `DjangoModelFormMutation`
 
 IMHO defining mutations based on Django Forms has struck a good balance between being DRY and having too many abstractions.
-Generally most of the customizing at the view level can go into two methods: `get_form_kwargs` and `perform_mutate`. 
+Generally most of the customizing at the view level can go into two methods: `get_form_kwargs` and `perform_mutate`.
 
 ```python
 from django.contrib.auth.forms import AuthenticationForm
@@ -220,4 +220,49 @@ class DjangoModelMutation(DjangoModelFormMutation):
                     del form.fields[fname]
             assert len(form.fields)
         return form
+```
+
+
+# Custom Field types
+
+For each new type, extend an existing type and do the following:
+
+* Define `serialize` & `deserialize` static methods
+* The class name will become the type name in GraphQL
+* Call `convert_django_field.register` to convert model fields
+* Call `convert_form_field.register` to convert form fields
+
+```python
+from graphene_django.converter import convert_django_field
+from graphene_django.forms.converter import convert_form_field
+from graphene.types.generic import GenericScalar
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.db import models
+from django.contrib.gis.forms import fields
+import json
+
+
+class GeoJSON(GenericScalar):
+    @staticmethod
+    def geos_to_json(value):
+        return json.loads(GEOSGeometry(value).geojson)
+
+    @staticmethod
+    def json_to_geos(value):
+        return GEOSGeometry(value)
+
+    serialize = geos_to_json
+    deserialize = json_to_geos
+
+
+@convert_django_field.register(models.PolygonField)
+@convert_django_field.register(models.MultiPolygonField)
+def convert_geofield_to_string(field, registry=None):
+     return GeoJSON(description=field.help_text, required=not field.null)
+
+
+@convert_form_field.register(fields.PolygonField)
+@convert_form_field.register(fields.MultiPolygonField)
+def convert_geofield_to_string(field, registry=None):
+     return GeoJSON(description=field.help_text, required=field.required)
 ```
