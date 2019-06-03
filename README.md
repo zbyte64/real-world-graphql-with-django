@@ -175,6 +175,7 @@ from graphene_django.forms.mutation import DjangoModelFormMutation
 from graphql_relay import from_global_id
 from django.forms.models import modelform_factory
 from django.forms import ModelChoiceField
+from django.forms.models import ModelMultipleChoiceField
 from stringcase import camelcase
 from .schema_tools import auth_check
 
@@ -212,9 +213,14 @@ class DjangoModelMutation(DjangoModelFormMutation):
         auth_check(info)
         # convert global ids to database ids
         for fname, field in cls._meta.form_class.base_fields.items():
-            if isinstance(field, ModelChoiceField) and input.get(fname):
-                #TODO assert models match
-                input[fname] = from_global_id(input[fname])[1]
+            if isinstance(field, ModelMultipleChoiceField):
+                global_ids = input[fname]
+                input[fname] = [from_global_id(global_id)[1] for global_id in global_ids]
+
+            elif isinstance(field, ModelChoiceField) and input.get(fname):
+                # TODO assert models match
+                _type, pk = from_global_id(input[fname])
+                input[fname] = pk
         if 'id' in input:
             input['id'] = from_global_id(input['id'])[1]
         form_kwargs = cls.get_form_kwargs(root, info, **input)
